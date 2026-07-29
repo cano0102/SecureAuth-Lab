@@ -2,23 +2,16 @@
 // IMPORTACIONES
 // ================================
 
-// Importamos la conexión a MySQL
-// Este archivo viene de config/db.js
-const connection = require("../config/db");
+// Importamos el pool de conexión a PostgreSQL
+// Este archivo debe conectarse a Neon mediante DATABASE_URL
+const pool = require("../config/db");
 
 // Importamos bcrypt
 // Sirve para convertir contraseñas normales en hashes seguros
 const bcrypt = require("bcrypt");
 
-
-// ================================
-// FUNCIÓN REGISTER
-// ================================
-
-// ========================================
-// IMPORTAR JWT
-// ========================================
-
+// Importamos JWT
+// Se utiliza para generar tokens de autenticación
 const jwt = require("jsonwebtoken");
 
 
@@ -30,12 +23,15 @@ const login = async (req, res) => {
 
   try {
 
-    // Obtener datos enviados
+    // ==============================
+    // OBTENER DATOS
+    // ==============================
+
     const { email, password } = req.body;
 
 
     // ==============================
-    // Validar campos vacíos
+    // VALIDAR CAMPOS VACÍOS
     // ==============================
 
     if (!email || !password) {
@@ -48,165 +44,163 @@ const login = async (req, res) => {
 
 
     // ==============================
-    // Buscar usuario
+    // BUSCAR USUARIO
     // ==============================
 
-    const query =
-      "SELECT * FROM usuarios WHERE email = ?";
+    // PostgreSQL utiliza $1 en lugar de ?
+    const query = `
+      SELECT *
+      FROM usuarios
+      WHERE email = $1
+    `;
 
 
-    connection.query(
-
+    // Ejecutamos la consulta
+    const result = await pool.query(
       query,
-      [email],
-
-      async (error, results) => {
-
-        // Error DB
-        if (error) {
-
-          return res.status(500).json({
-            message: "Error en servidor",
-            error
-          });
-
-        }
+      [email]
+    );
 
 
-        // Usuario no existe
-        if (results.length === 0) {
+    // ==============================
+    // USUARIO NO EXISTE
+    // ==============================
 
-          return res.status(400).json({
-            message: "Usuario no encontrado"
-          });
+    if (result.rows.length === 0) {
 
-        }
+      return res.status(400).json({
+        message: "Usuario no encontrado"
+      });
 
-
-        // Obtener usuario encontrado
-        const user = results[0];
-
-
-        // ==============================
-        // Comparar contraseña
-        // ==============================
-
-        const isMatch =
-          await bcrypt.compare(
-            password,
-            user.password
-          );
+    }
 
 
-        // Contraseña incorrecta
-        if (!isMatch) {
+    // ==============================
+    // OBTENER USUARIO
+    // ==============================
 
-          return res.status(400).json({
-            message: "Contraseña incorrecta"
-          });
+    // PostgreSQL devuelve los resultados
+    // dentro de result.rows
 
-        }
-
-
-        // ==============================
-        // Generar JWT
-        // ==============================
-
-        const token = jwt.sign(
-
-          {
-            id: user.id,
-            email: user.email,
-            rol: user.rol
-          },
-
-          process.env.JWT_SECRET,
-
-          {
-            expiresIn: "1h"
-          }
-
-        );
+    const user = result.rows[0];
 
 
-        // ==============================
-        // Login correcto
-        // ==============================
+    // ==============================
+    // COMPARAR CONTRASEÑA
+    // ==============================
 
-        res.status(200).json({
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
 
-          message: "Login exitoso",
 
-          token,
+    // ==============================
+    // CONTRASEÑA INCORRECTA
+    // ==============================
 
-          user: {
+    if (!isMatch) {
 
-            id: user.id,
-            nombre: user.nombre,
-            email: user.email,
-            rol: user.rol
+      return res.status(400).json({
+        message: "Contraseña incorrecta"
+      });
 
-          }
+    }
 
-        });
 
+    // ==============================
+    // GENERAR JWT
+    // ==============================
+
+    const token = jwt.sign(
+
+      {
+        id: user.id,
+        email: user.email,
+        rol: user.rol
+      },
+
+      process.env.JWT_SECRET,
+
+      {
+        expiresIn: "1h"
       }
 
     );
 
-  } catch(error){
 
-    res.status(500).json({
-      message:"Error interno",
+    // ==============================
+    // LOGIN CORRECTO
+    // ==============================
+
+    return res.status(200).json({
+
+      message: "Login exitoso",
+
+      token,
+
+      user: {
+
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol
+
+      }
+
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      "Error en login:",
       error
+    );
+
+    return res.status(500).json({
+
+      message: "Error interno del servidor"
+
     });
 
   }
 
 };
 
-// async significa que esta función trabajará
-// con procesos asíncronos (base de datos, bcrypt, etc)
+
+// ========================================
+// REGISTER
+// ========================================
+
 const register = async (req, res) => {
 
-  // try/catch evita que el servidor se caiga
-  // si ocurre un error inesperado
   try {
 
     // ==========================================
     // OBTENER DATOS DEL BODY
     // ==========================================
 
-    // req.body contiene los datos enviados
-    // desde el frontend
-
-    // Ejemplo:
-    // {
-    //   "nombre": "Anderson",
-    //   "email": "test@test.com",
-    //   "password": "123456"
-    // }
-
-    // Extraemos esos valores del body
-    const { nombre, email, password } = req.body;
+    const {
+      nombre,
+      email,
+      password
+    } = req.body;
 
 
     // ==========================================
-    // VALIDAR CAMPOS VACÍOS
+    // VALIDAR CAMPOS
     // ==========================================
-
-    // Si falta alguno de los campos:
-    // nombre, email o password
-    // devolvemos error 400
 
     if (!nombre || !email || !password) {
 
-      // return detiene la ejecución
       return res.status(400).json({
 
-        // Mensaje que recibirá el frontend
-        message: "Todos los campos son obligatorios",
+        message:
+          "Todos los campos son obligatorios"
+
       });
+
     }
 
 
@@ -214,184 +208,149 @@ const register = async (req, res) => {
     // VERIFICAR SI EL USUARIO YA EXISTE
     // ==========================================
 
-    // Query SQL para buscar usuario por email
-
-    // El ? es MUY importante
-    // porque evita SQL Injection
-
-    const checkUserQuery =
-      "SELECT * FROM usuarios WHERE email = ?";
+    const checkUserQuery = `
+      SELECT id
+      FROM usuarios
+      WHERE email = $1
+    `;
 
 
-    // ==========================================
-    // EJECUTAR QUERY
-    // ==========================================
+    // Ejecutar consulta
+    const userResult = await pool.query(
 
-    // connection.query ejecuta SQL
-
-    // Parámetros:
-    // 1. Query SQL
-    // 2. Valores que reemplazan los ?
-    // 3. Callback con resultado
-
-    connection.query(
-
-      // Query SQL
       checkUserQuery,
 
-      // Reemplaza ? por email
-      [email],
+      [email]
 
-      // Callback que recibe:
-      // error -> si algo falla
-      // results -> resultados encontrados
-      async (error, results) => {
-
-
-        // ==========================================
-        // ERROR CONSULTANDO USUARIO
-        // ==========================================
-
-        if (error) {
-
-          return res.status(500).json({
-
-            // Error del servidor
-            message: "Error verificando usuario",
-
-            // Error completo
-            error,
-          });
-        }
-
-
-        // ==========================================
-        // USUARIO YA EXISTE
-        // ==========================================
-
-        // results.length indica cuántos usuarios encontró
-
-        // Si es mayor que 0:
-        // el correo ya existe
-
-        if (results.length > 0) {
-
-          return res.status(400).json({
-
-            message: "El correo ya existe",
-          });
-        }
-
-
-        // ==========================================
-        // HASH DE CONTRASEÑA
-        // ==========================================
-
-        // bcrypt.hash convierte la contraseña
-        // en un hash seguro
-
-        // password -> contraseña original
-        // 10 -> salt rounds (nivel de seguridad)
-
-        // await espera a que bcrypt termine
-
-        const hashedPassword =
-          await bcrypt.hash(password, 10);
-
-
-        // ==========================================
-        // QUERY INSERT
-        // ==========================================
-
-        // Insertaremos:
-        // nombre
-        // email
-        // contraseña hasheada
-
-        const insertQuery = `
-          INSERT INTO usuarios
-          (nombre, email, password)
-          VALUES (?, ?, ?)
-        `;
-
-
-        // ==========================================
-        // INSERTAR USUARIO
-        // ==========================================
-
-        connection.query(
-
-          // Query SQL
-          insertQuery,
-
-          // Valores que reemplazan los ?
-          [
-            nombre,
-            email,
-            hashedPassword
-          ],
-
-          // Callback resultado INSERT
-          (error, result) => {
-
-
-            // ==========================================
-            // ERROR INSERTANDO USUARIO
-            // ==========================================
-
-            if (error) {
-
-              return res.status(500).json({
-
-                message: "Error registrando usuario",
-
-                error,
-              });
-            }
-
-
-            // ==========================================
-            // REGISTRO EXITOSO
-            // ==========================================
-
-            // status 201 significa:
-            // CREATED
-
-            res.status(201).json({
-
-              message:
-                "Usuario registrado correctamente",
-            });
-          }
-        );
-      }
     );
+
+
+    // ==========================================
+    // USUARIO YA EXISTE
+    // ==========================================
+
+    if (userResult.rows.length > 0) {
+
+      return res.status(400).json({
+
+        message:
+          "El correo ya existe"
+
+      });
+
+    }
+
+
+    // ==========================================
+    // HASH DE CONTRASEÑA
+    // ==========================================
+
+    const hashedPassword =
+      await bcrypt.hash(
+        password,
+        10
+      );
+
+
+    // ==========================================
+    // INSERTAR USUARIO
+    // ==========================================
+
+    // PostgreSQL utiliza:
+    // $1
+    // $2
+    // $3
+
+    // RETURNING id devuelve el ID
+    // del usuario recién creado
+
+    const insertQuery = `
+      INSERT INTO usuarios
+      (
+        nombre,
+        email,
+        password
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3
+      )
+      RETURNING id
+    `;
+
+
+    // Ejecutar INSERT
+
+    const insertResult = await pool.query(
+
+      insertQuery,
+
+      [
+        nombre,
+        email,
+        hashedPassword
+      ]
+
+    );
+
+
+    // ==========================================
+    // REGISTRO EXITOSO
+    // ==========================================
+
+    return res.status(201).json({
+
+      message:
+        "Usuario registrado correctamente",
+
+      user: {
+
+        id:
+          insertResult.rows[0].id,
+
+        nombre,
+
+        email
+
+      }
+
+    });
+
 
   } catch (error) {
 
     // ==========================================
-    // ERROR GENERAL DEL SERVIDOR
+    // ERROR GENERAL
     // ==========================================
 
-    res.status(500).json({
+    console.error(
+      "Error en registro:",
+      error
+    );
 
-      message: "Error interno del servidor",
 
-      error,
+    return res.status(500).json({
+
+      message:
+        "Error interno del servidor"
+
     });
+
   }
+
 };
 
 
-// ================================
-// EXPORTAR FUNCIÓN
-// ================================
-
-// Permite usar register
-// en otros archivos
+// ========================================
+// EXPORTAR CONTROLADORES
+// ========================================
 
 module.exports = {
-  register,
-  login
-};
 
+  register,
+
+  login
+
+};
