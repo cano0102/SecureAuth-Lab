@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const REGISTER_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@200;400;600;700;800&family=Rajdhani:wght@400;500;600&display=swap');
 
@@ -35,28 +37,62 @@ const REGISTER_CSS = `
   padding: 44px 40px;
   position: relative;
   z-index: 1;
-  clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
+  clip-path: polygon(
+    16px 0%,
+    100% 0%,
+    calc(100% - 16px) 100%,
+    0% 100%
+  );
 }
 
 .sal-reg-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #00e887, #00d4ff, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #00e887,
+    #00d4ff,
+    transparent
+  );
 }
 
 .sal-reg-corner {
   position: absolute;
-  width: 10px; height: 10px;
+  width: 10px;
+  height: 10px;
   border-color: #00e887;
   border-style: solid;
   opacity: 0.4;
 }
-.sal-rc-tl { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
-.sal-rc-tr { top: 8px; right: 8px; border-width: 1px 1px 0 0; }
-.sal-rc-bl { bottom: 8px; left: 8px; border-width: 0 0 1px 1px; }
-.sal-rc-br { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+
+.sal-rc-tl {
+  top: 8px;
+  left: 8px;
+  border-width: 1px 0 0 1px;
+}
+
+.sal-rc-tr {
+  top: 8px;
+  right: 8px;
+  border-width: 1px 1px 0 0;
+}
+
+.sal-rc-bl {
+  bottom: 8px;
+  left: 8px;
+  border-width: 0 0 1px 1px;
+}
+
+.sal-rc-br {
+  bottom: 8px;
+  right: 8px;
+  border-width: 0 1px 1px 0;
+}
 
 .sal-reg-logo {
   display: flex;
@@ -66,11 +102,22 @@ const REGISTER_CSS = `
 }
 
 .sal-reg-hex {
-  width: 32px; height: 32px;
+  width: 32px;
+  height: 32px;
   background: linear-gradient(135deg, #00e887, #00d4ff);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; flex-shrink: 0;
+  clip-path: polygon(
+    50% 0%,
+    100% 25%,
+    100% 75%,
+    50% 100%,
+    0% 75%,
+    0% 25%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .sal-reg-brand {
@@ -112,9 +159,11 @@ const REGISTER_CSS = `
   align-items: center;
   gap: 8px;
 }
+
 .sal-reg-subtitle::before {
   content: '';
-  width: 20px; height: 1px;
+  width: 20px;
+  height: 1px;
   background: #00d4ff;
 }
 
@@ -144,18 +193,28 @@ const REGISTER_CSS = `
   padding: 12px 40px 12px 16px;
   outline: none;
   transition: border-color 0.3s, box-shadow 0.3s;
-  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  clip-path: polygon(
+    8px 0%,
+    100% 0%,
+    calc(100% - 8px) 100%,
+    0% 100%
+  );
   box-sizing: border-box;
 }
+
 .sal-reg-field:focus {
   border-color: rgba(0,232,135,0.45);
   box-shadow: 0 0 0 1px rgba(0,232,135,0.1);
 }
-.sal-reg-field::placeholder { color: #2a4a6a; }
+
+.sal-reg-field::placeholder {
+  color: #2a4a6a;
+}
 
 .sal-reg-field-ico {
   position: absolute;
-  right: 14px; bottom: 13px;
+  right: 14px;
+  bottom: 13px;
   color: #2a4a6a;
   font-size: 15px;
   pointer-events: none;
@@ -193,7 +252,12 @@ const REGISTER_CSS = `
   border: none;
   padding: 14px;
   cursor: pointer;
-  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  clip-path: polygon(
+    10px 0%,
+    100% 0%,
+    calc(100% - 10px) 100%,
+    0% 100%
+  );
   transition: all 0.3s;
   margin-top: 4px;
   display: flex;
@@ -201,11 +265,16 @@ const REGISTER_CSS = `
   justify-content: center;
   gap: 8px;
 }
+
 .sal-reg-btn:hover {
   box-shadow: 0 0 28px rgba(0,232,135,0.35);
   transform: translateY(-1px);
 }
-.sal-reg-btn:active { transform: translateY(0); }
+
+.sal-reg-btn:active {
+  transform: translateY(0);
+}
+
 .sal-reg-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -218,7 +287,13 @@ const REGISTER_CSS = `
   gap: 12px;
   margin: 20px 0 16px;
 }
-.sal-reg-div-line { flex: 1; height: 1px; background: rgba(0,232,135,0.08); }
+
+.sal-reg-div-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(0,232,135,0.08);
+}
+
 .sal-reg-div-tag {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.6rem;
@@ -231,6 +306,7 @@ const REGISTER_CSS = `
   font-size: 0.9rem;
   color: #5a7a9a;
 }
+
 .sal-reg-link-row a {
   color: #00d4ff;
   text-decoration: none;
@@ -238,7 +314,10 @@ const REGISTER_CSS = `
   margin-left: 6px;
   transition: color 0.2s;
 }
-.sal-reg-link-row a:hover { color: #00e887; }
+
+.sal-reg-link-row a:hover {
+  color: #00e887;
+}
 
 .sal-reg-status {
   display: flex;
@@ -250,6 +329,7 @@ const REGISTER_CSS = `
   flex-wrap: wrap;
   gap: 8px;
 }
+
 .sal-reg-stat {
   font-family: 'Share Tech Mono', monospace;
   font-size: 0.6rem;
@@ -258,13 +338,20 @@ const REGISTER_CSS = `
   align-items: center;
   gap: 5px;
 }
+
 .sal-reg-dot {
-  width: 5px; height: 5px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #00e887;
   animation: blinkReg 2s step-end infinite;
 }
-@keyframes blinkReg { 50% { opacity: 0; } }
+
+@keyframes blinkReg {
+  50% {
+    opacity: 0;
+  }
+}
 
 .sal-reg-error {
   font-family: 'Share Tech Mono', monospace;
@@ -293,8 +380,13 @@ const REGISTER_CSS = `
 }
 
 @media (max-width: 480px) {
-  .sal-reg-card { padding: 36px 24px; }
-  .sal-reg-title { font-size: 1.5rem; }
+  .sal-reg-card {
+    padding: 36px 24px;
+  }
+
+  .sal-reg-title {
+    font-size: 1.5rem;
+  }
 }
 `;
 
@@ -302,23 +394,29 @@ export default function Register() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (document.getElementById("sal-register-css")) return;
+
     const style = document.createElement("style");
     style.id = "sal-register-css";
     style.textContent = REGISTER_CSS;
+
     document.head.appendChild(style);
   }, []);
 
-  const handleRegister = async () => {
+  const handleRegister = async (e) => {
+    e?.preventDefault();
+
     setError("");
     setSuccess("");
 
-    if (!nombre || !email || !password) {
+    // Validaciones
+    if (!nombre.trim() || !email.trim() || !password) {
       setError("// Completa todos los campos");
       return;
     }
@@ -329,32 +427,62 @@ export default function Register() {
     }
 
     setLoading(true);
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, password }),
-      });
 
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nombre: nombre.trim(),
+            email: email.trim(),
+            password,
+          }),
+        }
+      );
+
+      // Intentar obtener la respuesta como JSON
       const data = await response.json();
 
-      if (response.ok) {
-        setSuccess("// Usuario registrado — puedes iniciar sesión");
-        setNombre("");
-        setEmail("");
-        setPassword("");
-      } else {
-        setError(`// ${data.message || "Error al registrar usuario"}`);
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Error al registrar usuario"
+        );
       }
+
+      // Registro exitoso
+      setSuccess(
+        "// Usuario registrado — puedes iniciar sesión"
+      );
+
+      setNombre("");
+      setEmail("");
+      setPassword("");
+
     } catch (err) {
-      setError("// Error de conexión con el servidor");
+      console.error("Error en registro:", err);
+
+      if (err.message === "Failed to fetch") {
+        setError(
+          "// No se pudo conectar con el servidor"
+        );
+      } else {
+        setError(
+          `// ${err.message || "Error al registrar usuario"}`
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleRegister();
+    if (e.key === "Enter" && !loading) {
+      handleRegister(e);
+    }
   };
 
   return (
@@ -362,6 +490,8 @@ export default function Register() {
       <div className="sal-reg-grid" />
 
       <div className="sal-reg-card">
+
+        {/* Esquinas decorativas */}
         <div className="sal-reg-corner sal-rc-tl" />
         <div className="sal-reg-corner sal-rc-tr" />
         <div className="sal-reg-corner sal-rc-bl" />
@@ -369,110 +499,189 @@ export default function Register() {
 
         {/* Logo */}
         <div className="sal-reg-logo">
-          <div className="sal-reg-hex">🔐</div>
-          <span className="sal-reg-brand">SecureAuth Lab</span>
-          <span className="sal-reg-badge">v2.1</span>
-        </div>
-
-        <h1 className="sal-reg-title">Crear cuenta</h1>
-        <p className="sal-reg-subtitle">Nuevo usuario</p>
-
-        {/* Mensajes */}
-        {error && (
-          <div className="sal-reg-error">
-            <span>⚠</span> {error}
+          <div className="sal-reg-hex">
+            🔐
           </div>
-        )}
-        {success && (
-          <div className="sal-reg-success">
-            <span>✓</span> {success}
-          </div>
-        )}
 
-        {/* Nombre */}
-        <div className="sal-reg-field-group">
-          <label className="sal-reg-label">Nombre completo</label>
-          <input
-            className="sal-reg-field"
-            type="text"
-            placeholder="Tu nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <span className="sal-reg-field-ico">👤</span>
+          <span className="sal-reg-brand">
+            SecureAuth Lab
+          </span>
+
+          <span className="sal-reg-badge">
+            v2.1
+          </span>
         </div>
 
-        {/* Email */}
-        <div className="sal-reg-field-group">
-          <label className="sal-reg-label">Correo electrónico</label>
-          <input
-            className="sal-reg-field"
-            type="email"
-            placeholder="usuario@dominio.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <span className="sal-reg-field-ico">✉</span>
-        </div>
+        <h1 className="sal-reg-title">
+          Crear cuenta
+        </h1>
 
-        {/* Password */}
-        <div className="sal-reg-field-group">
-          <label className="sal-reg-label">Contraseña</label>
-          <input
-            className="sal-reg-field"
-            type="password"
-            placeholder="••••••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <span className="sal-reg-field-ico">🔒</span>
-        </div>
-
-        {/* Pills informativas */}
-        <div className="sal-reg-hints">
-          <span className="sal-reg-hint">✓ bcrypt hash</span>
-          <span className="sal-reg-hint">✓ Salt rounds</span>
-          <span className="sal-reg-hint">✓ MySQL</span>
-        </div>
-
-        {/* Botón */}
-        <button
-          className="sal-reg-btn"
-          onClick={handleRegister}
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <span>⟳</span> Procesando...
-            </>
-          ) : (
-            <>
-              <span>▶</span> Crear cuenta
-            </>
-          )}
-        </button>
-
-        <div className="sal-reg-divider">
-          <div className="sal-reg-div-line" />
-          <span className="sal-reg-div-tag">// REGISTER</span>
-          <div className="sal-reg-div-line" />
-        </div>
-
-        <p className="sal-reg-link-row">
-          ¿Ya tienes cuenta?
-          <Link to="/">Iniciar sesión →</Link>
+        <p className="sal-reg-subtitle">
+          Nuevo usuario
         </p>
 
-        <div className="sal-reg-status">
-          <span className="sal-reg-stat">
-            <span className="sal-reg-dot" /> Sistema operativo
+        {/* Mensaje de error */}
+        {error && (
+          <div className="sal-reg-error">
+            <span>⚠</span>
+            {error}
+          </div>
+        )}
+
+        {/* Mensaje de éxito */}
+        {success && (
+          <div className="sal-reg-success">
+            <span>✓</span>
+            {success}
+          </div>
+        )}
+
+        {/* Formulario */}
+        <form onSubmit={handleRegister}>
+
+          {/* Nombre */}
+          <div className="sal-reg-field-group">
+            <label className="sal-reg-label">
+              Nombre completo
+            </label>
+
+            <input
+              className="sal-reg-field"
+              type="text"
+              placeholder="Tu nombre"
+              value={nombre}
+              onChange={(e) =>
+                setNombre(e.target.value)
+              }
+              onKeyDown={handleKeyDown}
+              autoComplete="name"
+            />
+
+            <span className="sal-reg-field-ico">
+              👤
+            </span>
+          </div>
+
+          {/* Email */}
+          <div className="sal-reg-field-group">
+            <label className="sal-reg-label">
+              Correo electrónico
+            </label>
+
+            <input
+              className="sal-reg-field"
+              type="email"
+              placeholder="usuario@dominio.com"
+              value={email}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              onKeyDown={handleKeyDown}
+              autoComplete="email"
+            />
+
+            <span className="sal-reg-field-ico">
+              ✉
+            </span>
+          </div>
+
+          {/* Contraseña */}
+          <div className="sal-reg-field-group">
+            <label className="sal-reg-label">
+              Contraseña
+            </label>
+
+            <input
+              className="sal-reg-field"
+              type="password"
+              placeholder="••••••••••••"
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              onKeyDown={handleKeyDown}
+              autoComplete="new-password"
+            />
+
+            <span className="sal-reg-field-ico">
+              🔒
+            </span>
+          </div>
+
+          {/* Información de seguridad */}
+          <div className="sal-reg-hints">
+            <span className="sal-reg-hint">
+              ✓ bcrypt hash
+            </span>
+
+            <span className="sal-reg-hint">
+              ✓ Salt rounds
+            </span>
+
+            <span className="sal-reg-hint">
+              ✓ PostgreSQL
+            </span>
+          </div>
+
+          {/* Botón */}
+          <button
+            className="sal-reg-btn"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span>⟳</span>
+                Procesando...
+              </>
+            ) : (
+              <>
+                <span>▶</span>
+                Crear cuenta
+              </>
+            )}
+          </button>
+
+        </form>
+
+        {/* Separador */}
+        <div className="sal-reg-divider">
+          <div className="sal-reg-div-line" />
+
+          <span className="sal-reg-div-tag">
+            // REGISTER
           </span>
-          <span className="sal-reg-stat">POST /api/auth/register</span>
-          <span className="sal-reg-stat">bcrypt · JWT</span>
+
+          <div className="sal-reg-div-line" />
         </div>
+
+        {/* Link Login */}
+        <p className="sal-reg-link-row">
+          ¿Ya tienes cuenta?
+
+          <Link to="/">
+            Iniciar sesión →
+          </Link>
+        </p>
+
+        {/* Estado */}
+        <div className="sal-reg-status">
+
+          <span className="sal-reg-stat">
+            <span className="sal-reg-dot" />
+            Sistema operativo
+          </span>
+
+          <span className="sal-reg-stat">
+            POST /api/auth/register
+          </span>
+
+          <span className="sal-reg-stat">
+            bcrypt · JWT
+          </span>
+
+        </div>
+
       </div>
     </div>
   );
