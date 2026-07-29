@@ -113,6 +113,8 @@ const login = async (req, res) => {
     // ==============================
 
     console.log("JWT_SECRET:", process.env.JWT_SECRET);
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
+console.log("Tipo:", typeof process.env.JWT_SECRET);
 
     const token = jwt.sign(
       {
